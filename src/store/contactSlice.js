@@ -1,7 +1,7 @@
-import {createAction, createSlice} from '@reduxjs/toolkit';
+import { createAction, createSlice } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import mockContacts from "../util/mockContacts";
-import {addDisappearingMessage} from "./messageSlice";
+import { addDisappearingMessage } from "./messageSlice";
 
 const createContact = (name = '', phone = '') => ({
   id: uuidv4(),
@@ -14,6 +14,11 @@ const createContactValidation = () => ({
   name: [],
   phone: [],
 });
+
+const CONTACT_PROPERTIES = {
+  PHONE: 'phone',
+  NAME: 'name',
+};
 
 // <== This is dummy code and should be ignored. Only for demo purposes
 const initialContacts = mockContacts.map(mockContact => createContact(mockContact.name, mockContact.phone));
@@ -110,6 +115,8 @@ export const contactSlice = createSlice({
         state.contacts.splice(contactIndex, 1);
         state.contactIds.splice(contactIndex, 1);
         delete state.validationErrors[contactId];
+        validateContactNames(state);
+        validateContactPhones(state);
       }
     },
     contactNameChanged: (state, action) => {
@@ -152,9 +159,19 @@ export const selectContactIds = (state) => state.contact.contactIds;
 
 export const selectContactById = (contactId) => (state) => state.contact.contacts.find(contact => contact.id === contactId);
 
+const selectContactPropertyById = (contactId, property) => (state) => state.contact.contacts.find(contact => contact.id === contactId)[property];
+
+export const selectContactNameById = (contactId) => selectContactPropertyById(contactId, CONTACT_PROPERTIES.NAME);
+
+export const selectContactPhoneById = (contactId) => selectContactPropertyById(contactId, CONTACT_PROPERTIES.PHONE);
+
 export const selectIsFirstContact = (id) => (state) => state.contact.contacts[0].id === id;
 
-export const selectNameErrors = (contactId) => (state) => state.contact.validationErrors[contactId].name;
+const selectContactPropertyErrors = (contactId, property) => (state) => state.contact.validationErrors[contactId][property];
+
+export const selectNameErrors = (contactId) => selectContactPropertyErrors(contactId, CONTACT_PROPERTIES.NAME);
+
+export const selectPhoneErrors = (contactId) => selectContactPropertyErrors(contactId, CONTACT_PROPERTIES.PHONE);
 
 export const selectShouldShowAllErrors = (contactId) => (state) => {
   const contact = selectContactById(contactId)(state);
